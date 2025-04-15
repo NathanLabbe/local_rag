@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Document Chat</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1.5.10/css/pico.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav>
+                <ul>
+                    <li><strong>RAG Document Chat</strong></li>
+                </ul>
+                <ul>
+                    <li><a href="#" id="theme-switcher">🌙</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer>
+            <p>Lightweight RAG Document Chat System</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
+</body>
+</html>

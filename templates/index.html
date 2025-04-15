@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-container">
+    <div class="sidebar">
+        <div class="document-section">
+            <h3>Documents</h3>
+            <button id="drive-import-btn" class="contrast">Import from Google Drive</button>
+            <div id="drive-import-form" class="hidden">
+                <input type="text" id="folder-id" placeholder="Google Drive Folder ID (optional)">
+                <button id="drive-import-submit" class="primary">Import</button>
+                <button id="drive-import-cancel" class="secondary">Cancel</button>
+            </div>
+            
+            <div class="document-upload">
+                <form id="upload-form" enctype="multipart/form-data">
+                    <input type="file" id="document-file" accept=".txt,.pdf,.doc,.docx">
+                    <button type="submit" class="primary">Upload</button>
+                </form>
+            </div>
+            
+            <div class="document-list">
+                <h4>Uploaded Documents</h4>
+                <ul id="documents"></ul>
+                <div id="loading-documents" class="hidden">Loading...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="chat-container">
+        <div id="chat-messages"></div>
+        
+        <div class="chat-input">
+            <form id="chat-form">
+                <div class="input-group">
+                    <input type="text" id="message-input" placeholder="Ask a question about your documents...">
+                    <button type="submit" class="primary">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<dialog id="model-info-dialog">
+    <article>
+        <header>
+            <a href="#close" aria-label="Close" class="close" data-target="model-info-dialog"></a>
+            <h3>About the Model</h3>
+        </header>
+        <p>This system uses <strong>Ollama</strong> to run a lightweight LLM locally on your machine.</p>
+        <p>Before using this application, make sure to:</p>
+        <ol>
+            <li>Install Ollama from <a href="https://ollama.ai/" target="_blank">https://ollama.ai/</a></li>
+            <li>Pull the default model: <code>ollama pull llama3</code></li>
+        </ol>
+        <p>You can change the model in your environment settings.</p>
+        <footer>
+            <a href="#" class="secondary" data-target="model-info-dialog">Close</a>
+        </footer>
+    </article>
+</dialog>
+
+<script>
+    // Show the model info dialog on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            document.getElementById('model-info-dialog').setAttribute('open', '');
+        }, 500);
+    });
+</script>
+{% endblock %}

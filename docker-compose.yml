@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  weaviate:
+    image: semitechnologies/weaviate:1.24.5
+    ports:
+      - "8080:8080"
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: text2vec-transformers
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+
+  transformers:
+    image: semitechnologies/transformers-inference:sentence-transformers-all-MiniLM-L6-v2
+    environment:
+      ENABLE_CUDA: '0'
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - weaviate
+      - transformers
+    environment:
+      - WEAVIATE_URL=http://weaviate:8080
+      - TRANSFORMERS_URL=http://transformers:8080
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    volumes:
+      - ./credentials:/app/credentials
+      - ./app:/app/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  weaviate_data:
