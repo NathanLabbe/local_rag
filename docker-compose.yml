@@ -1,8 +1,25 @@
 version: '3.8'
 
 services:
+  healthcheck:
+    image: busybox:latest
+    depends_on:
+      - weaviate
+      - transformers
+    command: >
+      /bin/sh -c "
+      until wget -q --spider http://weaviate:8080/v1/.well-known/ready; do echo 'Waiting for weaviate...'; sleep 2; done &&
+      until wget -q --spider http://transformers:8080/.well-known/ready; do echo 'Waiting for transformers...'; sleep 2; done &&
+      echo 'All services are up!' && tail -f /dev/null
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://weaviate:8080/v1/.well-known/ready && wget -q --spider http://transformers:8080/.well-known/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   weaviate:
-    image: semitechnologies/weaviate:1.24.5
+    image: semitechnologies/weaviate:1.30.0
     ports:
       - "8080:8080"
     restart: on-failure:0
@@ -10,28 +27,43 @@ services:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'none'
+      DEFAULT_VECTORIZER_MODULE: text2vec-transformers
       ENABLE_MODULES: text2vec-transformers
       CLUSTER_HOSTNAME: 'node1'
+      TRANSFORMERS_INFERENCE_API: http://transformers:8080
     volumes:
       - weaviate_data:/var/lib/weaviate
+    depends_on:
+      transformers:
+        condition: service_started
+    healthcheck:
+      disable: true
 
   transformers:
     image: semitechnologies/transformers-inference:sentence-transformers-all-MiniLM-L6-v2
+    restart: always
     environment:
       ENABLE_CUDA: '0'
+    ports:
+      - "8001:8080"
+    healthcheck:
+      disable: true
 
   web:
     build: .
     ports:
       - "8000:8000"
     depends_on:
-      - weaviate
-      - transformers
+      healthcheck:
+        condition: service_healthy
     environment:
       - WEAVIATE_URL=http://weaviate:8080
+      - TRANSFORMERS_INFERENCE_API=http://transformers:8080
       - TRANSFORMERS_URL=http://transformers:8080
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - WEAVIATE_HOST=weaviate
+      - WEAVIATE_PORT=8080
+      - WEAVIATE_GRPC_PORT=50051
     volumes:
       - ./credentials:/app/credentials
       - ./app:/app/app

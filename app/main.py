@@ -1,14 +1,28 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from app.routes import chat, documents
 from app.database import init_db
 
-# Create FastAPI app
-app = FastAPI(title="Document RAG Chat")
+# Define lifespan first
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    print("Initializing database...")
+    try:
+        await init_db()
+        print("Database initialized successfully!")
+    except Exception as e:
+        print(f"Error initializing database: {str(e)}")
+        raise e
+    yield
+    # Shutdown logic (if any)
+
+# Create FastAPI app with lifespan
+app = FastAPI(title="Document RAG Chat", lifespan=lifespan)
 
 # Mount static files
 static_path = Path(__file__).parent / "static"
@@ -20,10 +34,6 @@ templates = Jinja2Templates(directory="templates")
 # Include routers
 app.include_router(chat.router)
 app.include_router(documents.router)
-
-@app.on_event("startup")
-async def startup_event():
-    await init_db()
 
 @app.get("/")
 async def root(request: Request):

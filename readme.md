@@ -36,7 +36,7 @@ Ollama allows you to run large language models locally.
 ```bash
 # Install Ollama (instructions at https://ollama.ai/)
 # Then download a lightweight model
-ollama pull llama3   # or another model like phi-2
+ollama pull llama3   # or another model like  phi3:3.8b if you want a lightweight model
 ```
 
 ### 2. Set Up Google Drive API (Optional, only if you want to import from Google Drive)
