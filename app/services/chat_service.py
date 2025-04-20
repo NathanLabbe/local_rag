@@ -82,7 +82,7 @@ class ChatService:
                         "prompt": prompt,
                         "stream": False
                     },
-                    timeout=60.0  # Increased timeout for LLM processing
+                    timeout=240.0  # Increased timeout for LLM processing
                 )
                 
                 if response.status_code == 200:
