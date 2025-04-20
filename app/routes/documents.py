@@ -3,6 +3,7 @@ from typing import List, Optional
 from app.models import DocumentResponse, DriveIngestionRequest
 from app.services.document_service import get_document_service, DocumentService
 from app.services.google_drive_service import get_drive_service, GoogleDriveService
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
@@ -21,16 +22,20 @@ async def upload_document(
     file: UploadFile = File(...),
     document_service: DocumentService = Depends(get_document_service)
 ):
+    """Upload a document (txt or pdf) and add it to the database"""
     try:
-        content = await file.read()
+        # Save the uploaded file temporarily
+        file_path = f"/tmp/{file.filename}"
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
         
-        # Process and store the document
-        result = await document_service.process_document(
-            content=content.decode("utf-8"),
+        response = await document_service.process_uploaded_file(
+            file_path=file_path,
             document_name=file.filename,
-            source="upload"
+            source="uploaded"
         )
-        return result
+        
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

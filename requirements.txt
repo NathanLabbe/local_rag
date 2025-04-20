@@ -5,10 +5,12 @@ python-multipart
 pydantic
 langchain
 langchain-community
-langchain-weaviate
-weaviate-client>=4.0.0
+langchain-chroma
+chromadb
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 llama-index
 httpx
+sentence-transformers
+PyMuPDF

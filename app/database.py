@@ -1,84 +1,43 @@
-import weaviate
-from weaviate.connect import ConnectionParams, ProtocolParams
-from app.config import settings
+import chromadb
+import os
 import logging
+from chromadb.config import Settings as ChromaSettings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Global client
-client = None
-
-async def get_client():
-    global client
-    if client is None:
-        client = weaviate.connect_to_custom(
-            http_host=f"{settings.weaviate_host}",
-            http_port=f"{settings.weaviate_port}",
-            http_secure=False,
-            grpc_host=f"{settings.weaviate_host}:{settings.weaviate_grpc_port}",
-            grpc_port=f"{settings.weaviate_grpc_port}",
-            grpc_secure=False,
-            skip_init_checks=True
-        ),
-    return client
+# Global client for ChromaDB
+_client = None
 
 async def init_db():
+    """Initialize the ChromaDB client and create the collection if needed"""
+    global _client
+    
     try:
-        client = await get_client()
-
-        # Check if schema exists, if not create it
-        collections = client.collections.list_all()
-        collection_names = [c.name for c in collections]
-
-        if settings.collection_name not in collection_names:
-            logger.info(f"Creating schema for {settings.collection_name}")
-
-            # Create collection using v4 API
-            collection = client.collections.create(
-                name=settings.collection_name,
-                vectorizer_config=weaviate.classes.config.Configure.Vectorizer.text2vec_transformers(),  # Use the transformers vectorizer
-                properties=[
-                    weaviate.classes.config.Property(
-                        name="content",
-                        data_type=weaviate.classes.config.DataType.TEXT,
-                    ),
-                    weaviate.classes.config.Property(
-                        name="document_id",
-                        data_type=weaviate.classes.config.DataType.TEXT,
-                        indexing=weaviate.classes.config.Configure.Property.Indexing(
-                            filterable=True
-                        ),
-                    ),
-                    weaviate.classes.config.Property(
-                        name="document_name",
-                        data_type=weaviate.classes.config.DataType.TEXT,
-                        indexing=weaviate.classes.config.Configure.Property.Indexing(
-                            filterable=True
-                        ),
-                    ),
-                    weaviate.classes.config.Property(
-                        name="chunk_id",
-                        data_type=weaviate.classes.config.DataType.INT,
-                        indexing=weaviate.classes.config.Configure.Property.Indexing(
-                            filterable=True
-                        ),
-                    ),
-                    weaviate.classes.config.Property(
-                        name="source",
-                        data_type=weaviate.classes.config.DataType.TEXT,
-                        indexing=weaviate.classes.config.Configure.Property.Indexing(
-                            filterable=True
-                        ),
-                    ),
-                ]
-            )
-            logger.info(f"Schema created for {settings.collection_name}")
-        else:
-            logger.info(f"Schema already exists for {settings.collection_name}")
-
+        # Create the directory for ChromaDB persistence if it doesn't exist
+        os.makedirs(settings.chroma_persist_directory, exist_ok=True)
+        
+        # Initialize ChromaDB client with persistence
+        _client = chromadb.PersistentClient(path=settings.chroma_persist_directory)
+        
+        # Create the collection - this will either create a new one or get an existing one
+        try:
+            # Try to get the collection first
+            collection = _client.get_collection(name=settings.collection_name)
+            logger.info(f"Using existing collection: {settings.collection_name}")
+        except Exception:
+            # If it doesn't exist, create it
+            collection = _client.create_collection(name=settings.collection_name)
+            logger.info(f"Created new collection: {settings.collection_name}")
+            
+        logger.info("ChromaDB initialized successfully")
     except Exception as e:
-        logger.error(f"Error initializing database: {str(e)}")
-        raise e
+        logger.error(f"Error initializing ChromaDB: {str(e)}")
+        raise
 
-# Explicitly export the init_db function
-__all__ = ['get_client', 'init_db']
+async def get_client():
+    """Return the ChromaDB client instance"""
+    global _client
+    if _client is None:
+        await init_db()
+    return _client
