@@ -4,13 +4,8 @@
     --primary-hover: #0a6d8a;
     --primary-focus: rgba(16, 149, 193, 0.125);
     --primary-inverse: #FFF;
-}
-
-[data-theme="dark"] {
-    --primary: #1095c1;
-    --primary-hover: #2da7cf;
-    --primary-focus: rgba(16, 149, 193, 0.25);
-    --primary-inverse: #FFF;
+    --sidebar-width: 300px;
+    --sidebar-collapsed-width: 30px;
 }
 
 .hidden {
@@ -23,16 +18,58 @@
     gap: 1rem;
     height: calc(100vh - 200px);
     min-height: 500px;
+    position: relative;
 }
 
 /* Sidebar */
 .sidebar {
-    width: 300px;
+    width: var(--sidebar-width);
     background-color: var(--card-background-color);
     border-radius: var(--border-radius);
     padding: 1rem;
     overflow-y: auto;
     flex-shrink: 0;
+    transition: width 0.3s ease, padding 0.3s ease;
+    position: relative;
+}
+
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+    padding: 0.5rem;
+    overflow: hidden;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    background: var(--primary);
+    color: var(--primary-inverse);
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    right: 3px;
+}
+
+.sidebar.collapsed .sidebar-content {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-content {
+    opacity: 1;
+    transition: opacity 0.2s ease;
 }
 
 .document-section {
@@ -139,6 +176,41 @@
     flex-grow: 1;
 }
 
+/* Settings panel */
+.settings-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--card-border-color);
+}
+
+.settings-group {
+    margin-bottom: 1rem;
+}
+
+.settings-section h4 {
+    margin-bottom: 0.5rem;
+}
+
+.settings-section label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.settings-section input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.system-prompt-container {
+    margin-top: 1rem;
+}
+
+.system-prompt-container textarea {
+    min-height: 100px;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .app-container {
@@ -150,25 +222,9 @@
         height: auto;
         max-height: 300px;
     }
-/* Add this to app/static/css/style.css */
-
-.chat-settings {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--card-border-color);
-}
-
-.chat-settings label {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.chat-settings input[type="checkbox"] {
-    margin-right: 0.5rem;
-}
-
-.hidden {
-    display: none !important;
-}
+    
+    .sidebar.collapsed {
+        height: 30px;
+        width: 100%;
+    }
 }

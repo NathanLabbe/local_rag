@@ -1,21 +1,38 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Theme switcher
-    const themeSwitcher = document.getElementById('theme-switcher');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Sidebar collapse/expand functionality
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
     
-    if (prefersDark) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        themeSwitcher.textContent = '☀️';
-    }
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        sidebarToggle.textContent = sidebar.classList.contains('collapsed') ? '→' : '←';
+    });
+
+    // System Prompt and Model Settings
+    const systemPromptInput = document.getElementById('system-prompt');
+    const llmModelInput = document.getElementById('llm-model');
+    const saveSettingsBtn = document.getElementById('save-settings');
     
-    themeSwitcher.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (document.documentElement.getAttribute('data-theme') === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            themeSwitcher.textContent = '🌙';
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            themeSwitcher.textContent = '☀️';
+    saveSettingsBtn.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    system_prompt: systemPromptInput.value,
+                    llm_model: llmModelInput.value
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to save settings');
+            }
+            
+            showNotification('Settings saved successfully');
+        } catch (error) {
+            showNotification('Error saving settings: ' + error.message, true);
         }
     });
 
@@ -114,7 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chat-messages');
     const messageInput = document.getElementById('message-input');
     const useLlmCheckbox = document.getElementById('use-llm');
-    const skipRetrievalCheckbox = document.getElementById('skip-retrieval');
     
     let chatHistory = [];
     
@@ -173,6 +189,30 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('Error: ' + error.message, true);
         }
     });
+
+    // Load current settings from server
+    async function loadSettings() {
+        try {
+            const response = await fetch('/api/settings');
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch settings');
+            }
+            
+            const settings = await response.json();
+            
+            // Update form fields
+            if (settings.system_prompt) {
+                systemPromptInput.value = settings.system_prompt;
+            }
+            
+            if (settings.llm_model) {
+                llmModelInput.value = settings.llm_model;
+            }
+        } catch (error) {
+            console.error('Error loading settings:', error);
+        }
+    }
 
     // Document listing and management
     async function loadDocuments() {
@@ -296,6 +336,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
     
-    // Initial document load
+    // Initial loads
     loadDocuments();
+    loadSettings();
+    
+    // Logic to enable/disable retrieval checkbox based on use-llm checkbox
+    const useRetrievalCheckbox = document.getElementById('use-retrieval');
+    
+    useLlmCheckbox.addEventListener('change', function() {
+        useRetrievalCheckbox.disabled = !this.checked;
+        if (!this.checked) {
+            useRetrievalCheckbox.checked = true; // Always retrieve if not using LLM
+        }
+    });
 });

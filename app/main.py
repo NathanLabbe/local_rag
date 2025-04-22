@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from app.routes import chat, documents
+from app.routes import chat, documents, settings
 from app.database import init_db
 
 # Define lifespan first
@@ -34,6 +34,7 @@ templates = Jinja2Templates(directory="templates")
 # Include routers
 app.include_router(chat.router)
 app.include_router(documents.router)
+app.include_router(settings.router)  # Added settings router
 
 @app.get("/")
 async def root(request: Request):

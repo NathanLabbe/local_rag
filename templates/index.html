@@ -2,40 +2,62 @@
 
 {% block content %}
 <div class="app-container">
-    <div class="sidebar">
-        <div class="document-section">
-            <h3>Documents</h3>
-            <button id="drive-import-btn" class="contrast">Import from Google Drive</button>
-            <div id="drive-import-form" class="hidden">
-                <input type="text" id="folder-id" placeholder="Google Drive Folder ID (optional)">
-                <button id="drive-import-submit" class="primary">Import</button>
-                <button id="drive-import-cancel" class="secondary">Cancel</button>
-            </div>
-            
-            <div class="document-upload">
-                <form id="upload-form" enctype="multipart/form-data">
-                    <input type="file" id="document-file" accept=".txt,.pdf,.doc,.docx">
-                    <button type="submit" class="primary">Upload</button>
-                </form>
-            </div>
-            
-            <div class="document-list">
-                <h4>Uploaded Documents</h4>
-                <ul id="documents"></ul>
-                <div id="loading-documents" class="hidden">Loading...</div>
-            </div>
-            
-            <!-- Chat Settings -->
-            <div class="chat-settings">
-                <h4>Chat Settings</h4>
-                <label for="use-llm">
-                    <input type="checkbox" id="use-llm" checked>
-                    Use LLM for responses
-                </label>
-                <label for="use-retrieval">
-                    <input type="checkbox" id="use-retrieval" checked>
-                    Use document retrieval
-                </label>
+    <div id="sidebar" class="sidebar">
+        <button id="sidebar-toggle" class="sidebar-toggle">←</button>
+        <div class="sidebar-content">
+            <div class="document-section">
+                <h3>Documents</h3>
+                <button id="drive-import-btn" class="contrast">Import from Google Drive</button>
+                <div id="drive-import-form" class="hidden">
+                    <input type="text" id="folder-id" placeholder="Google Drive Folder ID (optional)">
+                    <button id="drive-import-submit" class="primary">Import</button>
+                    <button id="drive-import-cancel" class="secondary">Cancel</button>
+                </div>
+                
+                <div class="document-upload">
+                    <form id="upload-form" enctype="multipart/form-data">
+                        <input type="file" id="document-file" accept=".txt,.pdf,.doc,.docx">
+                        <button type="submit" class="primary">Upload</button>
+                    </form>
+                </div>
+                
+                <div class="document-list">
+                    <h4>Uploaded Documents</h4>
+                    <ul id="documents"></ul>
+                    <div id="loading-documents" class="hidden">Loading...</div>
+                </div>
+                
+                <!-- Settings Section -->
+                <div class="settings-section">
+                    <h3>Settings</h3>
+                    
+                    <!-- Chat Settings -->
+                    <div class="settings-group">
+                        <h4>Chat Options</h4>
+                        <label for="use-llm">
+                            <input type="checkbox" id="use-llm" checked>
+                            Use LLM for responses
+                        </label>
+                        <label for="use-retrieval">
+                            <input type="checkbox" id="use-retrieval" checked>
+                            Use document retrieval
+                        </label>
+                    </div>
+                    
+                    <!-- Model Settings -->
+                    <div class="settings-group">
+                        <h4>Model Settings</h4>
+                        <label for="llm-model">LLM Model:</label>
+                        <input type="text" id="llm-model" placeholder="phi3:3.8b">
+                        
+                        <div class="system-prompt-container">
+                            <label for="system-prompt">System Prompt:</label>
+                            <textarea id="system-prompt" placeholder="You are a helpful assistant that answers questions based on the provided documents..."></textarea>
+                        </div>
+                        
+                        <button id="save-settings" class="primary">Save Settings</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -58,38 +80,25 @@
     <article>
         <header>
             <a href="#close" aria-label="Close" class="close" data-target="model-info-dialog"></a>
-            <h3>About the Model</h3>
+            <h3>About the RAG Chat System</h3>
         </header>
         <p>This system uses <strong>Ollama</strong> to run a lightweight LLM locally on your machine.</p>
         <p>Before using this application, make sure to:</p>
         <ol>
             <li>Install Ollama from <a href="https://ollama.ai/" target="_blank">https://ollama.ai/</a></li>
-            <li>Pull the default model: <code>ollama pull llama3</code></li>
+            <li>Pull the default model: <code>ollama pull phi3:3.8b</code></li>
         </ol>
-        <p>You can change the model in your environment settings.</p>
+        <p><strong>Default Model: phi3:3.8b</strong></p>
+        <p>You can change the model in the settings panel. Be sure to:</p>
+        <ul>
+            <li>Pull the model first with Ollama (e.g., <code>ollama pull llama3</code>)</li>
+            <li>Use the correct model identifier format (e.g., <code>llama3</code>, <code>phi3:3.8b</code>)</li>
+            <li>Ensure your system has sufficient resources to run the model</li>
+        </ul>
+        <p>For a list of available models, visit <a href="https://ollama.com/library" target="_blank">https://ollama.com/library</a></p>
         <footer>
             <a href="#" class="secondary" data-target="model-info-dialog">Close</a>
         </footer>
     </article>
 </dialog>
-
-<script>
-    // Show the model info dialog on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            document.getElementById('model-info-dialog').setAttribute('open', '');
-        }, 500);
-        
-        // Logic to enable/disable retrieval checkbox based on use-llm checkbox
-        const useLlmCheckbox = document.getElementById('use-llm');
-        const useRetrievalCheckbox = document.getElementById('use-retrieval');
-        
-        useLlmCheckbox.addEventListener('change', function() {
-            useRetrievalCheckbox.disabled = !this.checked;
-            if (!this.checked) {
-                useRetrievalCheckbox.checked = true; // Always retrieve if not using LLM
-            }
-        });
-    });
-</script>
 {% endblock %}
