@@ -9,6 +9,7 @@ class Settings(BaseModel):
     # LLM
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434")
     ollama_model: str = os.getenv("OLLAMA_MODEL", "phi3:3.8b")
+    system_prompt: Optional[str] = os.getenv("SYSTEM_PROMPT", None)
 
     # Google Drive
     google_credentials_file: str = os.getenv("GOOGLE_CREDENTIALS_FILE", "credentials/credentials.json")

@@ -113,6 +113,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-form');
     const chatMessages = document.getElementById('chat-messages');
     const messageInput = document.getElementById('message-input');
+    const useLlmCheckbox = document.getElementById('use-llm');
+    const skipRetrievalCheckbox = document.getElementById('skip-retrieval');
     
     let chatHistory = [];
     
@@ -134,6 +136,10 @@ document.addEventListener('DOMContentLoaded', function() {
             chatMessages.appendChild(loadingMessage);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
+            // Get checkbox values
+            const useLlm = useLlmCheckbox.checked;
+            const skipRetrieval = useLlm && skipRetrievalCheckbox.checked;
+            
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
@@ -141,7 +147,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     query: query,
-                    history: chatHistory
+                    history: chatHistory,
+                    use_llm: useLlm,
+                    skip_retrieval: skipRetrieval
                 })
             });
             
@@ -155,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
             chatMessages.removeChild(loadingMessage);
             
             // Add assistant message with sources
-            addMessage('assistant', result.answer, result.source_documents);
+            addMessage('assistant', result.answer, result.sources);
             
             // Update chat history
             chatHistory.push({role: 'user', content: query});
@@ -249,10 +257,10 @@ document.addEventListener('DOMContentLoaded', function() {
             sourcesDiv.className = 'sources';
             sourcesDiv.innerHTML = '<strong>Sources:</strong>';
             
-            sources.slice(0, 3).forEach(source => {
+            sources.forEach(source => {
                 const sourceItem = document.createElement('div');
                 sourceItem.className = 'source-item';
-                sourceItem.textContent = `${source.metadata.document_name} (Chunk ${source.metadata.chunk_id + 1})`;
+                sourceItem.textContent = `${source.document_name} (Relevance: ${source.relevance.toFixed(2)})`;
                 sourcesDiv.appendChild(sourceItem);
             });
             

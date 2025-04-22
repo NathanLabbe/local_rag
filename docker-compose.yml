@@ -7,6 +7,7 @@ services:
       - "8000:8000"
     environment:
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      #- SYSTEM_PROMPT="You are a helpful assistant specialized in answering questions about documents. If you know the answer without looking at documents, you can provide it directly. Always be concise and accurate."
     volumes:
       - ./credentials:/app/credentials
       - ./app:/app/app

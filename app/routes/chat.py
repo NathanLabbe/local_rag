@@ -12,6 +12,8 @@ router = APIRouter(
 class ChatRequest(BaseModel):
     query: str
     history: Optional[List[Dict[str, Any]]] = []
+    use_llm: bool = True
+    skip_retrieval: bool = False
 
 class ChatResponse(BaseModel):
     answer: str
@@ -24,8 +26,11 @@ async def process_chat(
 ):
     """Process a chat message and return a response"""
     try:
-        # Use get_response instead of process_query
-        result = await chat_service.get_response(chat_request.query)
+        result = await chat_service.get_response(
+            chat_request.query, 
+            use_llm=chat_request.use_llm,
+            skip_retrieval=chat_request.skip_retrieval
+        )
         return ChatResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
