@@ -32,9 +32,9 @@
                     <input type="checkbox" id="use-llm" checked>
                     Use LLM for responses
                 </label>
-                <label for="skip-retrieval" class="hidden">
-                    <input type="checkbox" id="skip-retrieval">
-                    Skip retrieval if LLM knows answer
+                <label for="use-retrieval">
+                    <input type="checkbox" id="use-retrieval" checked>
+                    Use document retrieval
                 </label>
             </div>
         </div>
@@ -80,16 +80,14 @@
             document.getElementById('model-info-dialog').setAttribute('open', '');
         }, 500);
         
-        // Logic to show/hide skip-retrieval checkbox based on use-llm checkbox
+        // Logic to enable/disable retrieval checkbox based on use-llm checkbox
         const useLlmCheckbox = document.getElementById('use-llm');
-        const skipRetrievalLabel = document.querySelector('label[for="skip-retrieval"]');
+        const useRetrievalCheckbox = document.getElementById('use-retrieval');
         
         useLlmCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                skipRetrievalLabel.classList.remove('hidden');
-            } else {
-                skipRetrievalLabel.classList.add('hidden');
-                document.getElementById('skip-retrieval').checked = false;
+            useRetrievalCheckbox.disabled = !this.checked;
+            if (!this.checked) {
+                useRetrievalCheckbox.checked = true; // Always retrieve if not using LLM
             }
         });
     });

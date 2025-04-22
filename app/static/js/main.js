@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Get checkbox values
             const useLlm = useLlmCheckbox.checked;
-            const skipRetrieval = useLlm && skipRetrievalCheckbox.checked;
+            const useRetrieval = document.getElementById('use-retrieval').checked;
             
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     query: query,
                     history: chatHistory,
                     use_llm: useLlm,
-                    skip_retrieval: skipRetrieval
+                    skip_retrieval: !useRetrieval // We inverse the value here
                 })
             });
             
