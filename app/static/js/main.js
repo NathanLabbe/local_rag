@@ -1,3 +1,50 @@
+// Theme toggle functionality
+const themeToggleButton = document.getElementById('theme-toggle-button');
+const themeIcon = document.getElementById('theme-icon');
+const themeText = document.getElementById('theme-text');
+const temperatureInput = document.getElementById('temperature');
+const temperatureValue = document.getElementById('temperature-value');
+const topPInput = document.getElementById('top-p');
+const topPValue = document.getElementById('top-p-value');
+const maxTokensInput = document.getElementById('max-tokens');
+
+// Update display values when sliders change
+temperatureInput.addEventListener('input', () => {
+    temperatureValue.textContent = temperatureInput.value;
+});
+
+topPInput.addEventListener('input', () => {
+    topPValue.textContent = topPInput.value;
+});
+// Function to set theme
+function setTheme(isDark) {
+    if (isDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeIcon.textContent = '☀️';
+        themeText.textContent = 'Light Mode';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeIcon.textContent = '🌙';
+        themeText.textContent = 'Dark Mode';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+// Initialize theme from localStorage or system preference
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    setTheme(true);
+} else {
+    setTheme(false);
+}
+
+// Toggle theme when button is clicked
+themeToggleButton.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    setTheme(!isDark);
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Show model info dialog on page load
     const modelInfoDialog = document.getElementById('model-info-dialog');
@@ -26,7 +73,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     system_prompt: systemPromptInput.value,
-                    llm_model: llmModelInput.value
+                    llm_model: llmModelInput.value,
+                    temperature: parseFloat(temperatureInput.value),
+                    top_p: parseFloat(topPInput.value),
+                    max_tokens: parseInt(maxTokensInput.value)
                 })
             });
             
@@ -216,6 +266,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (settings.llm_model) {
                 llmModelInput.value = settings.llm_model;
+            }
+             // Set values for new parameters
+            if (settings.temperature !== undefined) {
+                temperatureInput.value = settings.temperature;
+                temperatureValue.textContent = settings.temperature;
+            }
+            
+            if (settings.top_p !== undefined) {
+                topPInput.value = settings.top_p;
+                topPValue.textContent = settings.top_p;
+            }
+            
+            if (settings.max_tokens !== undefined) {
+                maxTokensInput.value = settings.max_tokens;
             }
         } catch (error) {
             console.error('Error loading settings:', error);

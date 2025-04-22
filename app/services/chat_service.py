@@ -182,7 +182,10 @@ class ChatService:
                     json={
                         "model": settings.ollama_model,
                         "prompt": prompt,
-                        "stream": False
+                        "stream": False,
+                        "temperature": settings.temperature,
+                        "top_p": settings.top_p,
+                        "num_predict": settings.max_tokens  # Ollama uses num_predict for max_tokens
                     },
                     timeout=240.0  # Increased timeout for LLM processing
                 )

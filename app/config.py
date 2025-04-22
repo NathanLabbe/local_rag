@@ -10,6 +10,9 @@ class Settings(BaseModel):
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434")
     ollama_model: str = os.getenv("OLLAMA_MODEL", "phi3:3.8b")
     system_prompt: Optional[str] = os.getenv("SYSTEM_PROMPT", None)
+    temperature: float = float(os.getenv("TEMPERATURE", "0.7"))
+    top_p: float = float(os.getenv("TOP_P", "0.9"))
+    max_tokens: int = int(os.getenv("MAX_TOKENS", "2000"))
 
     # Google Drive
     google_credentials_file: str = os.getenv("GOOGLE_CREDENTIALS_FILE", "credentials/credentials.json")

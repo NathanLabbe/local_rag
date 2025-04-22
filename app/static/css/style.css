@@ -10,11 +10,36 @@
     --card-background-color: #ffffff;
     --card-border-color: #e8e8e8;
     --card-sectionning-background-color: #f9f9f9;
+    --bg-color: #f8f9fa;
+    --text-color: #333333;
+    --card-bg-color: #ffffff;
+    --card-border-color: #e8e8e8;
+    --card-section-bg-color: #f9f9f9;
+    --chat-user-bg: var(--primary);
+    --chat-user-text: #ffffff;
+    --chat-assistant-bg: #f9f9f9;
+    --chat-assistant-text: #333333;
+}
+
+/* Dark mode colors */
+[data-theme="dark"] {
+    --primary: #5a9cf0;
+    --primary-hover: #4a8ce2;
+    --bg-color: #222222;
+    --text-color: #e0e0e0;
+    --card-bg-color: #333333;
+    --card-border-color: #444444;
+    --card-section-bg-color: #3a3a3a;
+    --chat-user-bg: #4a8ce2;
+    --chat-user-text: #ffffff;
+    --chat-assistant-bg: #3a3a3a;
+    --chat-assistant-text: #e0e0e0;
 }
 
 body {
     font-size: 14px;
-    background-color: #f8f9fa;
+    background-color: var(--bg-color);
+    color: var(--text-color);
 }
 
 .container {
@@ -37,7 +62,8 @@ body {
 /* Sidebar */
 .sidebar {
     width: var(--sidebar-width);
-    background-color: var(--card-background-color);
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--card-border-color);
     border-radius: var(--border-radius);
     padding: 0.6rem;
     overflow-y: auto;
@@ -145,7 +171,8 @@ body {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    background-color: var(--card-background-color);
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--card-border-color);
     border-radius: var(--border-radius);
     overflow: hidden;
     box-shadow: 0 1px 3px #8b21210d;
@@ -169,13 +196,14 @@ body {
 
 .message.user {
     align-self: flex-end;
-    background-color: var(--primary);
-    color: var(--primary-inverse);
+    background-color: var(--chat-user-bg);
+    color: var(--chat-user-text);
 }
 
 .message.assistant {
     align-self: flex-start;
-    background-color: var(--card-sectionning-background-color);
+    background-color: var(--chat-assistant-bg);
+    color: var(--chat-assistant-text);
 }
 
 .sources {
@@ -312,4 +340,17 @@ dialog footer {
         height: 30px;
         width: 100%;
     }
+}
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    cursor: pointer;
+}
+
+.theme-toggle-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 6px;
 }
