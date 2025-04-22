@@ -1,20 +1,20 @@
 /* Base styles */
 :root {
-    --primary: #62a1d3;
-    --primary-hover: #4f85af;
-    --primary-focus: rgba(98, 161, 211, 0.125);
+    --primary: #4a90e2;
+    --primary-hover: #3a7bc8;
+    --primary-focus: rgba(74, 144, 226, 0.125);
     --primary-inverse: #FFF;
-    --sidebar-width: 300px;
+    --sidebar-width: 280px;
     --sidebar-collapsed-width: 30px;
-    --border-radius: 6px;
-    --card-background-color: #fcfcfc;
-    --card-border-color: #eaeaea;
-    --card-sectionning-background-color: #f8f8f8;
+    --border-radius: 4px;
+    --card-background-color: #ffffff;
+    --card-border-color: #e8e8e8;
+    --card-sectionning-background-color: #f9f9f9;
 }
 
 body {
-    font-size: 15px;
-    background-color: #f5f7fa;
+    font-size: 14px;
+    background-color: #f8f9fa;
 }
 
 .container {
@@ -39,12 +39,12 @@ body {
     width: var(--sidebar-width);
     background-color: var(--card-background-color);
     border-radius: var(--border-radius);
-    padding: 0.75rem;
+    padding: 0.6rem;
     overflow-y: auto;
     flex-shrink: 0;
     transition: width 0.3s ease, padding 0.3s ease;
     position: relative;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(180, 40, 40, 0.05);
 }
 
 .sidebar.collapsed {
@@ -148,7 +148,7 @@ body {
     background-color: var(--card-background-color);
     border-radius: var(--border-radius);
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px #8b21210d;
 }
 
 #chat-messages {
@@ -161,10 +161,10 @@ body {
 }
 
 .message {
-    padding: 0.6rem 0.8rem;
+    padding: 0.5rem 0.6rem;
     border-radius: var(--border-radius);
-    max-width: 85%;
-    line-height: 1.4;
+    max-width: 80%;
+    line-height: 1.3;
 }
 
 .message.user {
@@ -188,7 +188,7 @@ body {
 .source-item {
     padding: 0.4rem;
     margin-top: 0.25rem;
-    background-color: rgba(0, 0, 0, 0.03);
+    background-color: #8b666608;
     border-radius: var(--border-radius);
 }
 

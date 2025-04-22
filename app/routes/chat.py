@@ -28,6 +28,7 @@ async def process_chat(
     try:
         result = await chat_service.get_response(
             chat_request.query, 
+            history=chat_request.history,
             use_llm=chat_request.use_llm,
             skip_retrieval=chat_request.skip_retrieval
         )

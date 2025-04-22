@@ -20,71 +20,115 @@ class ChatService:
         except InvalidCollectionException:
             self.collection = self.client.create_collection(name=self.collection_name)
     
-    async def process_query(self, query: str) -> Dict[str, Any]:
-        """Alias for get_response to maintain compatibility with existing code"""
-        return await self.get_response(query)
-    
-    async def get_response(self, query: str, use_llm: bool = True, skip_retrieval: bool = False) -> Dict[str, Any]:
+    async def get_response(self, 
+                        query: str, 
+                        history: List[Dict[str, Any]] = None, 
+                        use_llm: bool = True, 
+                        skip_retrieval: bool = False) -> Dict[str, Any]:
+        """
+        Generate a response to a user query based on document retrieval and/or LLM generation.
+        
+        Args:
+            query: The user's query string
+            history: Optional chat history for context
+            use_llm: Whether to use the LLM for response generation
+            skip_retrieval: Whether to skip document retrieval step
+            
+        Returns:
+            Dictionary containing the answer and source information
+        """
+        if history is None:
+            history = []
+            
         sources = []
+        context = ""
         
-        # Only perform retrieval if not skipping
+        # Perform retrieval if not skipping
         if not skip_retrieval:
-            # Get query embedding
-            query_embedding = await self.embedding_service.get_embeddings(query)
+            sources, context = await self._retrieve_relevant_documents(query)
             
-            # Query the collection for similar chunks
-            results = self.collection.query(
-                query_embeddings=[query_embedding],
-                n_results=5,  # Get top 5 most relevant chunks
-                include=["documents", "metadatas", "distances"]
-            )
-            
-            # Process the results to extract context and sources
-            context = ""
-            
-            if results and results["documents"] and len(results["documents"]) > 0:
-                for i, (doc, metadata, distance) in enumerate(zip(
-                    results["documents"][0], results["metadatas"][0], results["distances"][0]
-                )):
-                    # Add document to context
-                    context += f"\nChunk {i+1}:\n{doc}\n"
-                    
-                    # Add source info
-                    sources.append({
-                        "document_name": metadata.get("document_name", "Unknown"),
-                        "source": metadata.get("source", "Unknown"),
-                        "chunk_id": metadata.get("chunk_id", i),
-                        "relevance": 1 - distance  # Convert distance to relevance score
-                    })
-        else:
-            context = ""
-        
-        # If no context found and retrieval was attempted
-        if not context and not skip_retrieval:
-            return {
-                "answer": "I couldn't find any relevant information in the documents to answer your question.",
-                "sources": []
-            }
+            # If no context found and retrieval was attempted
+            if not context:
+                if not use_llm:
+                    return {
+                        "answer": "I couldn't find any relevant information in the documents to answer your question.",
+                        "sources": []
+                    }
+                # If using LLM, we'll continue with empty context
         
         # If not using LLM, just return the retrieved documents
         if not use_llm:
-            # Format documents as readable answer
-            doc_answer = "Here are the most relevant documents for your query:\n\n"
-            for i, source in enumerate(sources):
-                doc_answer += f"Document {i+1}: {source['document_name']}\n"
-                # Get the actual text content
-                doc_content = results["documents"][0][i]
-                # Truncate if too long for display
-                if len(doc_content) > 500:
-                    doc_content = doc_content[:500] + "..."
-                doc_answer += f"Content: {doc_content}\n\n"
+            return self._format_document_answer(sources, context)
             
+        # If using LLM, get response from model
+        answer = await self._get_llm_response(query, context, history)
+        
+        return {
+            "answer": answer,
+            "sources": sources
+        }
+    
+    async def _retrieve_relevant_documents(self, query: str) -> tuple:
+        """Retrieve relevant documents from the vector store"""
+        # Get query embedding
+        query_embedding = await self.embedding_service.get_embeddings(query)
+        
+        # Query the collection for similar chunks
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=5,  # Get top 5 most relevant chunks
+            include=["documents", "metadatas", "distances"]
+        )
+        
+        # Process the results to extract context and sources
+        context = ""
+        sources = []
+        
+        if results and results["documents"] and len(results["documents"][0]) > 0:
+            for i, (doc, metadata, distance) in enumerate(zip(
+                results["documents"][0], results["metadatas"][0], results["distances"][0]
+            )):
+                # Add document to context
+                context += f"\nChunk {i+1}:\n{doc}\n"
+                
+                # Add source info
+                sources.append({
+                    "document_name": metadata.get("document_name", "Unknown"),
+                    "source": metadata.get("source", "Unknown"),
+                    "chunk_id": metadata.get("chunk_id", i),
+                    "relevance": 1 - distance  # Convert distance to relevance score
+                })
+                
+        return sources, context
+    
+    def _format_document_answer(self, sources, context) -> Dict[str, Any]:
+        """Format retrieved documents as a readable answer"""
+        if not sources:
             return {
-                "answer": doc_answer if sources else "No relevant documents found.",
-                "sources": sources
+                "answer": "No relevant documents found.",
+                "sources": []
             }
             
-        # If using LLM, prepare the prompt
+        doc_answer = "Here are the most relevant documents for your query:\n\n"
+        for i, source in enumerate(sources):
+            doc_answer += f"Document {i+1}: {source['document_name']}\n"
+            
+            # Extract corresponding content
+            chunk_content = context.split(f"Chunk {i+1}:\n")[1].split("\n\nChunk")[0]
+            
+            # Truncate if too long for display
+            if len(chunk_content) > 500:
+                chunk_content = chunk_content[:500] + "..."
+                
+            doc_answer += f"Content: {chunk_content}\n\n"
+        
+        return {
+            "answer": doc_answer,
+            "sources": sources
+        }
+    
+    async def _get_llm_response(self, query: str, context: str, history: List[Dict[str, Any]]) -> str:
+        """Get response from the LLM"""
         system_prompt = settings.system_prompt or """
         You are a helpful assistant that answers questions based on the provided documents.
         If the documents contain the information, use it to provide accurate answers.
@@ -93,11 +137,22 @@ class ChatService:
         Always be truthful, helpful, and concise.
         """
         
-        # Prepare the prompt for the LLM with system prompt
+        # Format chat history for the prompt
+        history_text = ""
+        if history:
+            history_text = "Previous conversation:\n"
+            for msg in history:
+                role = msg.get("role", "unknown")
+                content = msg.get("content", "")
+                history_text += f"{role.capitalize()}: {content}\n"
+            history_text += "\n"
+        
+        # Prepare the prompt for the LLM
         if context:
             prompt = f"""
             {system_prompt}
             
+            {history_text}
             Answer the following question. Use the provided context if relevant.
             
             Context:
@@ -111,13 +166,14 @@ class ChatService:
             prompt = f"""
             {system_prompt}
             
+            {history_text}
             Answer the following question based on your knowledge. If you don't know, say so.
             
             Question: {query}
             
             Answer:
             """
-                
+        
         # Send to Ollama for response generation
         try:
             async with httpx.AsyncClient() as client:
@@ -132,24 +188,13 @@ class ChatService:
                 )
                 
                 if response.status_code == 200:
-                    answer = response.json().get("response", "")
-                    
-                    return {
-                        "answer": answer,
-                        "sources": sources
-                    }
+                    return response.json().get("response", "")
                 else:
                     logger.error(f"Error from Ollama API: {response.status_code}, {response.text}")
-                    return {
-                        "answer": "Sorry, there was an error generating a response.",
-                        "sources": sources
-                    }
+                    return "Sorry, there was an error generating a response."
         except Exception as e:
             logger.error(f"Error calling Ollama API: {str(e)}")
-            return {
-                "answer": f"Error: {str(e)}",
-                "sources": sources
-            }
+            return f"Error: {str(e)}"
 
 async def get_chat_service():
     client = await get_client()

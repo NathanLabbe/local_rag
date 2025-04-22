@@ -135,6 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chat-messages');
     const messageInput = document.getElementById('message-input');
     const useLlmCheckbox = document.getElementById('use-llm');
+    const useHistoryCheckbox = document.getElementById('use-history');
     
     let chatHistory = [];
     
@@ -167,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     query: query,
-                    history: chatHistory,
+                    history: useHistoryCheckbox.checked ? chatHistory : [], // Only send history if checkbox is checked
                     use_llm: useLlm,
                     skip_retrieval: !useRetrieval // We inverse the value here
                 })
