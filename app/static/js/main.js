@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Show model info dialog on page load
+    const modelInfoDialog = document.getElementById('model-info-dialog');
+    modelInfoDialog.setAttribute('open', '');
+    
     // Sidebar collapse/expand functionality
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebar-toggle');
@@ -201,9 +205,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const settings = await response.json();
             
-            // Update form fields
+            // Update form fields with complete values
             if (settings.system_prompt) {
                 systemPromptInput.value = settings.system_prompt;
+                // Make sure textarea is big enough to show content
+                systemPromptInput.style.height = 'auto';
+                systemPromptInput.style.height = (systemPromptInput.scrollHeight) + 'px';
             }
             
             if (settings.llm_model) {
@@ -213,6 +220,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error loading settings:', error);
         }
     }
+
+    // Make system prompt textarea resize as content changes
+    systemPromptInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
 
     // Document listing and management
     async function loadDocuments() {

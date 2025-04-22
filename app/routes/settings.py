@@ -1,6 +1,7 @@
 # app/routes/settings.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 from app.config import settings as app_settings
 import os
 
@@ -10,18 +11,18 @@ router = APIRouter(
 )
 
 class SettingsUpdate(BaseModel):
-    system_prompt: str = None
-    llm_model: str = None
+    system_prompt: Optional[str] = None
+    llm_model: Optional[str] = None
 
 class SettingsResponse(BaseModel):
-    system_prompt: str = None
-    llm_model: str = None
+    system_prompt: Optional[str] = None
+    llm_model: Optional[str] = None
 
 @router.get("/", response_model=SettingsResponse)
 async def get_settings():
     """Get current settings"""
     return {
-        "system_prompt": app_settings.system_prompt,
+        "system_prompt": app_settings.system_prompt or "",  # Convert None to empty string
         "llm_model": app_settings.ollama_model
     }
 
@@ -40,7 +41,7 @@ async def update_settings(settings_update: SettingsUpdate):
             os.environ["OLLAMA_MODEL"] = settings_update.llm_model
         
         return {
-            "system_prompt": app_settings.system_prompt,
+            "system_prompt": app_settings.system_prompt or "",  # Convert None to empty string
             "llm_model": app_settings.ollama_model
         }
     except Exception as e:
